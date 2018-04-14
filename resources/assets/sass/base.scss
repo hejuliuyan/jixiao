@@ -1,0 +1,21 @@
+$icon-font-path: "/assets/fonts/bootstrap/";
+$fa-font-path: "/assets/fonts/font-awesome/";
+
+$theme-color: #39C;
+$theme-light-color: #5AADD6;
+
+$alert-border-radius: 0;
+$padding-base-vertical: 5px;
+
+$brand-primary: #39C;
+
+$link-color: #39C;
+$link-hover-color: #5AADD6;
+$link-hover-decoration: none;
+
+@import "vendor/animate";
+@import "vendor/mi-table";
+@import "vendor/mi-sheet";
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
+@import "node_modules/font-awesome/scss/font-awesome";
+@import "node_modules/sweetalert2/src/sweetalert2";

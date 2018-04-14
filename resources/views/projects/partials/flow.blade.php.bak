@@ -1,0 +1,344 @@
+@extends('projects.detail')
+
+@section('middle')
+    <form class="project-form" method="post" action="{{ route('project.detail.flow_submit', $project->id) }}" accept-charset="UTF-8">
+        {{ csrf_field() }}
+        <input type="hidden" name="max_num" value="{{ $project->max_num }}">
+
+        <div class="sheet-head"></div>
+
+        <div class="sheet-table">
+            @foreach($projectFlows as $num => $projectFlow)
+                <table width="90%">
+                    <thead>
+                    <tr>
+                        <th colspan="6">
+                            <div class="sheet-item">
+                                @if($project->is_whole)
+                                    <span>项目流转情况--第{{ $num+1 }}次</span>
+                                @else
+                                    <span>项目流转情况</span>
+                                @endif
+                            </div>
+                        </th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr style="background-color: #eee">
+                        <td width="15%">角色</td>
+                        <td width="15%">担当者</td>
+                        <td width="15%">操作</td>
+                        <td width="15%">状态</td>
+                        <td width="20%">备注</td>
+                        <td width="20%">更新时间</td>
+                    </tr>
+                    @foreach($projectFlow->flow as $index => $flow)
+                        @if($projectFlow->status == 1)
+                            <tr>
+                                <td>{{ config('admin.projects.post')[$flow->result] }}</td>
+                                @if($flow->user_id)
+                                    <td>{{ $flow->user->name }}</td>
+                                    <td>{{ config('admin.projects.operate')[$flow->result] }}</td>
+                                    <td>
+                                        @if($flow->result == 1 && $num > 0)
+                                            再次发起
+                                        @else
+                                            {{ config('admin.projects.result')[$flow->result] }}
+                                        @endif
+                                    </td>
+                                    <td>{{ $flow->remark }}</td>
+                                    <td>{{ $flow->updated_at }}</td>
+                                @else
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                @endif
+                            </tr>
+                        @else
+                            <tr>
+                                <td>{{ config('admin.projects.post')[$flow->result] }}</td>
+                                @if(empty($flow->user_id))
+                                    <td></td>
+                                    <td>
+                                        @if($flow->result == 2 && $currentUser->ability('finance', 'project.flow.charge'))
+                                            @if($project->state == 1 || $project->state == 3)
+                                                <div class="sheet-item sheet-btn">
+                                                    <a href="{{ route('project.detail.payment', $project->id) }}" class="btn btn-primary">{{ config('admin.projects.operate')[$flow->result] }}</a>
+                                                </div>
+                                            @endif
+                                        @endif
+
+                                        @if($flow->result == 3 && $currentUser->ability('file', 'project.flow.file'))
+                                            @if($project->state > 0)
+                                                <div class="sheet-item sheet-btn">
+                                                    <a href="{{ route('project.detail.base', $project->id) }}" class="btn btn-primary">{{ config('admin.projects.operate')[$flow->result] }}</a>
+                                                </div>
+                                            @endif
+                                        @endif
+
+                                        @if($flow->result == 4 && !$current_leaders->isEmpty())
+                                            <div class="sheet-item sheet-btn">
+                                                @if(!empty($projectFlow->flow[1]->user_id))
+                                                    <input type="hidden" name="user_id" value="{{ $currentUser->id }}"/>
+                                                    <input type="hidden" name="result" value="{{ $flow->result }}"/>
+
+                                                    <button type="button" class="btn btn-primary flow-start">{{ config('admin.projects.operate')[$flow->result] }}</button>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        @if($flow->result == 5 && $currentUser->division == $project->division && $currentUser->ability('division_manager', 'project.flow.bonus'))
+                                            @if($project->state == 4)
+                                                <div class="sheet-item sheet-btn">
+                                                    <a href="{{ route('project.detail.distribution', $project->id) }}" class="btn btn-primary">{{ config('admin.projects.operate')[$flow->result] }}</a>
+                                                </div>
+                                            @endif
+                                        @endif
+
+                                        @if($flow->result == 6 && !$current_leaders->isEmpty())
+                                            @if($project->state == 5)
+                                                <div class="sheet-item">
+                                                    <input type="hidden" name="user_id" value="{{ $currentUser->id }}"/>
+                                                    <input type="hidden" name="result" value="{{ $flow->result }}"/>
+
+                                                    <button type="button" class="btn btn-primary flow-start">{{ config('admin.projects.operate')[$flow->result] }}</button>
+                                                    <button type="button" class="btn btn-primary flow-reset">驳回</button>
+                                                </div>
+                                            @endif
+                                        @endif
+
+                                        @if($flow->result == 7 && $currentUser->ability('chief_engineer', 'project.flow.examine'))
+                                            @if($project->state == 6)
+                                                <div class="sheet-item">
+                                                    <input type="hidden" name="user_id" value="{{ $currentUser->id }}"/>
+                                                    <input type="hidden" name="result" value="{{ $flow->result }}"/>
+
+                                                    {{--是否含有经营人--}}
+                                                    @if($projectFlow->has_operator)
+                                                        <a href="{{ route('project.detail.distribution', $project->id) }}" class="btn btn-primary">{{ config('admin.projects.operate')[$flow->result] }}</a>
+                                                    @else
+                                                        <button type="button" class="btn btn-primary flow-start">{{ config('admin.projects.operate')[$flow->result] }}</button>
+                                                    @endif
+                                                    <button type="button" class="btn btn-primary flow-reset">驳回</button>
+                                                </div>
+                                            @endif
+                                        @endif
+
+                                        @if($flow->result == 8 && $currentUser->ability('general_manager', 'project.flow.final'))
+                                            @if($project->state == 7)
+                                                <div class="sheet-item">
+                                                    <input type="hidden" name="user_id" value="{{ $currentUser->id }}"/>
+                                                    <input type="hidden" name="result" value="{{ $flow->result }}"/>
+
+                                                    <button type="button" class="btn btn-primary flow-start">{{ config('admin.projects.operate')[$flow->result] }}</button>
+                                                    <button type="button" class="btn btn-primary flow-reset">驳回</button>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                @else
+                                    <td>{{ $flow->user->name }}</td>
+                                    <td>
+                                        @if($flow->result == 1 && $project->state < 4 && $currentUser->division == $project->division && $currentUser->hasRole('division_manager'))
+                                            <div class="sheet-item sheet-btn">
+                                                <a href="{{ route('project.detail.base', $project->id) }}" class="btn btn-primary">编辑</a>
+                                            </div>
+                                        @else
+                                            {{ config('admin.projects.operate')[$flow->result] }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($flow->result == 1 && $num > 0)
+                                            再次发起
+                                        @else
+                                            {{ config('admin.projects.result')[$flow->result] }}
+                                        @endif
+                                    </td>
+                                    <td>{{ $flow->remark }}</td>
+                                    <td>
+                                        <div class="sheet-item">
+                                            <span>{{ $flow->updated_at }}</span>
+                                            @if($flow->user_id == $currentUser->id)
+                                                <div class="sheet-out">
+                                                    <input type="hidden" name="result" value="{{ $flow->result }}"/>
+                                                    <input type="hidden" name="remark" value="{{ $flow->remark }}"/>
+                                                    <button type="button" class="btn btn-primary remark-edit">备注</button>
+                                                </div>
+                                            @else
+                                                @if($flow->result == 3 && $currentUser->ability('chief_engineer', 'project.flow.examine'))
+                                                    <div class="sheet-out">
+                                                        @if($flow->confirm == 1)
+                                                            <span class="label label-success">已确认</span>
+                                                        @else
+                                                            <button type="button" class="btn btn-primary flow-confirm">确认</button>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @endif
+                    @endforeach
+                    </tbody>
+                </table>
+            @endforeach
+        </div>
+
+        <div class="sheet-footer">
+            <a href="{{ back_url('project.index_flow') }}" class="btn btn-primary">返回</a>
+        </div>
+    </form>
+    <script type="text/javascript">
+        //流转操作
+        $(document).on('click', '.flow-start', function(){
+            var _this = $(this);
+            var form = $('.project-form');
+
+            _this.attr('disabled', true);
+
+            swal({
+                html: '<strong>确定进行该操作吗</strong>',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                showLoaderOnConfirm: true
+            }).then(function(){
+                form.submit();
+            },function(dismiss){
+                if (dismiss === 'cancel') {
+                    _this.attr('disabled', false);
+                }
+            }).catch(swal.noop)
+        });
+
+        //驳回操作
+        $(document).on('click', '.flow-reset', function(){
+            var _this = $(this);
+
+            swal({
+                html: '<strong>该操作会重置流转至奖金分配，确定继续吗</strong>',
+                type: 'warning',
+                confirmButtonText: '确定',
+                showCancelButton: true,
+                cancelButtonText: '取消',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        //请求
+                        $.ajax({
+                            url: '{{ route('project.detail.flow_reset', $project->id) }}',
+                            method: 'POST',
+                            dataType: 'json'
+                        }).done(function(data) {
+                            if(data.result == 1) {
+                                promptBox1(true, data.msg);
+
+                                window.location.reload();
+                            }else {
+                                promptBox2(false, data.msg);
+                            }
+                        }).always(function () {
+                            resolve();
+                        });
+                    });
+                }
+            }).catch(swal.noop)
+        });
+
+        //备注
+        $(document).on('click', '.remark-edit', function(){
+            var _this = $(this);
+            var _parent = _this.parents('td');
+            var result = _this.siblings('input[name="result"]').val();
+            var remark_data = _this.siblings('input[name="remark"]').val();
+
+            swal({
+                html: '<strong>修改备注</strong><textarea name="remark-input" class="swal2-textarea" placeholder="请填写备注"></textarea>',
+                confirmButtonText: '确定',
+                showCancelButton: true,
+                cancelButtonText: '取消',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        var remark_input = $('textarea[name="remark-input"]').val();
+
+                        //请求
+                        $.ajax({
+                            url: '{{ route('project.detail.flow_remark', $project->id) }}',
+                            data: {
+                                result: result,
+                                remark: remark_input
+                            },
+                            method: 'POST',
+                            dataType: 'json'
+                        }).done(function(data) {
+                            if(data.result == 1) {
+                                promptBox1(true, data.msg);
+
+                                _parent.prev().html(remark_input);
+                                _this.siblings('input[name="remark"]').val(remark_input);
+                                _this.parent().siblings('span').html(data.info);
+                            }else {
+                                promptBox2(false, data.msg);
+                            }
+                        }).always(function () {
+                            resolve();
+                        });
+                    })
+                },
+                allowOutsideClick: false
+            }).catch(swal.noop);
+
+            //初始化
+            $('textarea[name="remark-input"]').val(remark_data);
+        });
+
+        //确认归档
+        $(document).on('click', '.flow-confirm', function(){
+            var _this = $(this);
+
+            swal({
+                html: '<strong>确认项目归档吗</strong>',
+                type: 'warning',
+                confirmButtonText: '确定',
+                showCancelButton: true,
+                cancelButtonText: '取消',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        //请求
+                        $.ajax({
+                            url: '{{ route('project.detail.flow_confirm', $project->id) }}',
+                            data: {
+                                result: 3
+                            },
+                            method: 'POST',
+                            dataType: 'json'
+                        }).done(function(data) {
+                            if(data.result == 1) {
+                                promptBox1(true, data.msg);
+
+                                window.location.reload();
+                            }else {
+                                promptBox2(false, data.msg);
+                            }
+                        }).always(function () {
+                            resolve();
+                        });
+                    });
+                }
+            }).catch(swal.noop)
+
+
+        })
+    </script>
+@stop
