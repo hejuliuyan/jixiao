@@ -42,6 +42,11 @@ class Project extends Model
         return $query->whereBetween('updated_at', $period);
     }
 
+    public function scopeDatecreate($query, $period)
+    {
+        return $query->whereBetween('created_at', $period);
+    }
+
     public function scopeMember($query, $user)
     {
         return $query->whereHas('projectDistribution', function ($query_f) use ($user) {

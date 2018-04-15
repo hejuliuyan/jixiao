@@ -144,7 +144,7 @@ class ProjectController extends Controller
                 })
                 ->where(function ($query) use ($info) {
                     if(!empty($info['start_date']) && !empty($info['end_date'])) { //下单时间
-                        $query->date([$info['start_date'], $info['end_date']]);
+                        $query->datecreate([$info['start_date'], $info['end_date']]);
                     }
 
                     if(!empty($info['s_division'])) { //部门
@@ -224,7 +224,7 @@ class ProjectController extends Controller
         $projects = Project::search($info['s_word'], null, true)
             ->where(function ($query) use ($info) {
                 if(!empty($info['start_date']) && !empty($info['end_date'])) { //下单时间
-                    $query->date([$info['start_date'], $info['end_date']]);
+                    $query->datecreate([$info['start_date'], $info['end_date']]);
                 }
 
                 if(!empty($info['s_division'])) { //部门
